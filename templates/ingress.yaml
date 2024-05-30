@@ -1,27 +1,26 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nls-test-alb-ingress
-  namespace: test
+  name: {{ include "elasticsearch.fullname" . }}-ingress
+  namespace: {{ .Release.Namespace }}
   annotations:
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/description: 'helm test ALB ingress controller'
-    alb.ingress.kubernetes.io/load-balancer-name: 'helm-test-alb'
-    alb.ingress.kubernetes.io/load-balancer-size: 'medium'
-    alb.ingress.kubernetes.io/actions.elasticsearch-service: >
-      {"type":"targetGroup","targetGroup":{"targetGroups":[{"serviceName":"elasticsearch-service","servicePort":9200,"weight":100}],"enableStickySession":true}}
-    alb.ingress.kubernetes.io/healthcheck-path: "/"
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
   labels:
-    app: nls-test-alb-ingress
+    app: {{ include "elasticsearch.name" . }}
 spec:
-  ingressClassName: alb
+  ingressClassName: {{ .Values.ingress.className }}
   rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-             name: elasticsearch-service
-             port:
-                name: use-annotation
+    - host: {{ .Values.ingress.hosts[0].host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.hosts[0].paths[0].path }}
+            pathType: {{ .Values.ingress.hosts[0].paths[0].pathType }}
+            backend:
+              service:
+                name: {{ .Values.ingress.hosts[0].paths[0].serviceName }}
+                port:
+                  name: {{ .Values.ingress.hosts[0].paths[0].servicePort }}
+{{- end }}
