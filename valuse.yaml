@@ -1,0 +1,80 @@
+replicaCount: 1
+
+image:
+  repository: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch
+  tag: "7.10.2"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: regseecret
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9200
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 9200
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 9200
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+extraEnvs:
+  - name: "ELASTIC_USERNAME"
+    value: "elastic"
+  - name: "ELASTIC_PASSWORD"
+    value: "parrot"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
