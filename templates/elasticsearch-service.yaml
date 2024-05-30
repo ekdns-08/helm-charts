@@ -3,19 +3,19 @@ kind: Service
 metadata:
   annotations:
     alb.ingress.kubernetes.io/healthcheck-path: /
-  name: nls-elasticsearch-service
-  namespace: test
+  name: {{ include "elasticsearch.fullname" . }}-service
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: elasticsearch-docker
+    app: {{ include "elasticsearch.name" . }}
 spec:
-  type: NodePort
+  type: {{ .Values.service.type }}
   selector:
-    app: elasticsearch-docker
+    app: {{ include "elasticsearch.name" . }}
   ports:
     - protocol: TCP
-      port: 9200
-      targetPort: 9200
-      nodePort: 30083
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      nodePort: {{ .Values.service.nodePort }}
   sessionAffinity: ClientIP
   sessionAffinityConfig:
     clientIP:
