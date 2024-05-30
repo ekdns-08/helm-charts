@@ -41,7 +41,7 @@ ingress:
     alb.ingress.kubernetes.io/healthcheck-path: "/"
   className: alb
   hosts:
-    - host: ""
+    - host:
       paths:
         - path: /
           pathType: Prefix
