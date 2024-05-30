@@ -2,31 +2,17 @@ apiVersion: v1
 entries:
   elasticsearch:
   - apiVersion: v2
-    created: "2024-05-30T16:38:17.127544462+09:00"
+    created: "2024-05-30T18:31:58.797461421+09:00"
+    digest: 04702e9f1da94736a0400661fabfe1f14995285aab4f5ad3af5cc5c48066d883
+    name: elasticsearch
+    urls:
+    - elasticsearch-7.10.2.tgz
+    version: 7.10.2
+  - apiVersion: v2
+    created: "2024-05-30T18:31:58.797304818+09:00"
     digest: 51d99339d21ab6df9f0b2e83aaa2d527fcfc15fe4b0feedb1810c0579f9f5bbb
     name: elasticsearch
     urls:
-    - https://ekdns-08.github.io/helm-charts/elasticsearch-0.0.1.tgz
+    - elasticsearch-0.0.1.tgz
     version: 0.0.1
-  redis:
-  - apiVersion: v1
-    appVersion: 5.0.7
-    created: "2024-05-30T16:38:17.130409763+09:00"
-    deprecated: true
-    description: DEPRECATED Open source, advanced key-value store. It is often referred
-      to as a data structure server since keys can contain strings, hashes, lists,
-      sets and sorted sets.
-    digest: 1bd7372252aaead6d411e3286b16b7c2c8b6b402c409f0f815caf60bd2a857af
-    home: http://redis.io/
-    icon: https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png
-    keywords:
-    - redis
-    - keyvalue
-    - database
-    name: redis
-    sources:
-    - https://github.com/bitnami/bitnami-docker-redis
-    urls:
-    - https://ekdns-08.github.io/helm-charts/stable/redis-10.5.7.tgz
-    version: 10.5.7
-generated: "2024-05-30T16:38:17.125443825+09:00"
+generated: "2024-05-30T18:31:58.79549496+09:00"
