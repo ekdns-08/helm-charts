@@ -54,7 +54,6 @@ spec:
             periodSeconds: {{ .Values.probes.startup.periodSeconds }}
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- range .Values.imagePullSecrets }}
-        - name: {{ .name }}
+        - name: ‎regsecret
         {{- end }}
       {{- end }}
