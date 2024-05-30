@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regsecret
+  namespace: test
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJzZW91bGJpZ2RhdGEtcmVnaXN0cnkubmNyLmdvdi1udHJ1c3MuY29tIjp7InVzZXJuYW1lIjoiQkI2ODlDMURCMzIxOEUwRjcyMzEiLCJwYXNzd29yZCI6IjMyODZGN0NBNUJFNzU1RTZCOUI5QzdBRUVFM0Y3RUMzMjhEQzJDMEUiLCJhdXRoIjoiUWtJMk9EbERNVVJDTXpJeE9FVXdSamN5TXpFNk16STROa1kzUTBFMVFrVTNOVFZGTmtJNVFqbEROMEZGUlVVelJqZEZRek15T0VSRE1rTXdSUT09In19fQ==
+type: kubernetes.io/dockerconfigjson
