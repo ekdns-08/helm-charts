@@ -1,0 +1,57 @@
+# startup Porbe 적용
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch-deployment
+  namespace: test
+  labels:
+    app: elasticsearch-docker
+  annotations:
+    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
+spec:
+  replicas: 3
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: elasticsearch-docker
+  template:
+    metadata:
+      labels:
+        app: elasticsearch-docker
+    spec:
+      containers:
+        - name: elasticsearch
+          image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9200
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1200Mi
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 9200
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 9200
+          startupProbe:
+            tcpSocket:
+              port: 9200
+            failureThreshold: 30
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: regsecret
