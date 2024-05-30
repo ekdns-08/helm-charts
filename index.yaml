@@ -3,20 +3,20 @@ entries:
   elasticsearch:
   - apiVersion: v2
     appVersion: 7.10.2
-    created: "2024-05-31T01:37:44.134086356+09:00"
+    created: "2024-05-31T01:41:14.994928905+09:00"
     description: A Helm chart for Elasticsearch
-    digest: 258ca1bd1aeed6aa4667321d1db650c197f236174ac4758122565170c229666c
+    digest: 9ff103090bfba037caad7d6f0881af2fdf8b1b8090b7e04bf04fea4fd14fc2f1
     name: elasticsearch
     urls:
     - elasticsearch-1.0.2.tgz
     version: 1.0.2
   - apiVersion: v2
     appVersion: 7.10.2
-    created: "2024-05-31T01:37:44.128771077+09:00"
+    created: "2024-05-31T01:41:14.982790292+09:00"
     description: A Helm chart for Elasticsearch
     digest: 255d3f8353f73d96122f8e3f492076b5b1e323da6e8c7fdcccbbf123bd081d9d
     name: elasticsearch
     urls:
     - elasticsearch-1.0.0.tgz
     version: 1.0.0
-generated: "2024-05-31T01:37:44.126440854+09:00"
+generated: "2024-05-31T01:41:14.980482895+09:00"
