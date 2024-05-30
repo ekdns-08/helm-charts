@@ -2,17 +2,17 @@ apiVersion: v1
 entries:
   elasticsearch:
   - apiVersion: v2
-    created: "2024-05-30T18:38:07.454160031+09:00"
-    digest: 28462754e2653e252289928b1a07584915936a82bcc14babcbc83ac6016ca795
+    created: "2024-05-30T18:49:05.793280896+09:00"
+    digest: 30947b7ae0f256fec298540c7b0ac60e5206d4fc71a196ece6197a001df33829
     name: elasticsearch
     urls:
-    - elasticsearch-7.10.2.tgz
-    version: 7.10.2
+    - elasticsearch-0.0.2.tgz
+    version: 0.0.2
   - apiVersion: v2
-    created: "2024-05-30T18:38:07.45078827+09:00"
+    created: "2024-05-30T18:49:05.793102485+09:00"
     digest: 51d99339d21ab6df9f0b2e83aaa2d527fcfc15fe4b0feedb1810c0579f9f5bbb
     name: elasticsearch
     urls:
     - elasticsearch-0.0.1.tgz
     version: 0.0.1
-generated: "2024-05-30T18:38:07.448290412+09:00"
+generated: "2024-05-30T18:49:05.791020255+09:00"
