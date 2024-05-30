@@ -1,80 +1,49 @@
-replicaCount: 1
+replicaCount: 3
 
 image:
   repository: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch
   tag: "7.10.2"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets:
-  - name: regseecret
-
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  create: true
-  name: ""
-
-podAnnotations: {}
-podLabels: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  - name: regsecret
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 9200
+  nodePort: 30083
 
 resources:
-  limits:
-    cpu: 1000m
-    memory: 2Gi
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 100m
+    memory: 1200Mi
 
-livenessProbe:
-  httpGet:
-    path: /
-    port: 9200
-  initialDelaySeconds: 30
-  timeoutSeconds: 5
+probes:
+  liveness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  startup:
+    failureThreshold: 30
+    periodSeconds: 10
 
-readinessProbe:
-  httpGet:
-    path: /
-    port: 9200
-  initialDelaySeconds: 30
-  timeoutSeconds: 5
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-persistence:
+ingress:
   enabled: true
-  storageClass: "standard"
-  accessModes:
-    - ReadWriteOnce
-  size: 10Gi
-
-extraEnvs:
-  - name: "ELASTIC_USERNAME"
-    value: "elastic"
-  - name: "ELASTIC_PASSWORD"
-    value: "parrot"
-
-nodeSelector: {}
-tolerations: []
-affinity: {}
+  annotations: 
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/description: 'helm test ALB ingress controller'
+    alb.ingress.kubernetes.io/load-balancer-name: 'helm-test-alb'
+    alb.ingress.kubernetes.io/load-balancer-size: 'medium'
+    alb.ingress.kubernetes.io/actions.elasticsearch-service: >
+      {"type":"targetGroup","targetGroup":{"targetGroups":[{"serviceName":"elasticsearch-service","servicePort":9200,"weight":100}],"enableStickySession":true}}
+    alb.ingress.kubernetes.io/healthcheck-path: "/"
+  className: alb
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: elasticsearch-service
+          servicePort: use-annotation
