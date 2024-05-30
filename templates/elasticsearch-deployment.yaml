@@ -1,15 +1,14 @@
-# startup Porbe 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elasticsearch-deployment
-  namespace: test
+  name: {{ include "elasticsearch.fullname" . }}-deployment
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: elasticsearch-docker
+    app: {{ include "elasticsearch.name" . }}
   annotations:
-    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
+    kubernetes.io/change-cause: {{ .Values.image.repository }}:{{ .Values.image.tag }}
 spec:
-  replicas: 3
+  replicas: {{ .Values.replicaCount }}
   progressDeadlineSeconds: 120
   revisionHistoryLimit: 10
   strategy:
@@ -19,39 +18,39 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: elasticsearch-docker
+      app: {{ include "elasticsearch.name" . }}
   template:
     metadata:
       labels:
-        app: elasticsearch-docker
+        app: {{ include "elasticsearch.name" . }}
     spec:
       containers:
         - name: elasticsearch
-          image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 9200
+            - containerPort: {{ .Values.service.port }}
               protocol: TCP
           resources:
             requests:
-              cpu: 100m
-              memory: 1200Mi
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
           livenessProbe:
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
             httpGet:
               path: /
-              port: 9200
+              port: {{ .Values.service.port }}
           readinessProbe:
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
             httpGet:
               path: /
-              port: 9200
+              port: {{ .Values.service.port }}
           startupProbe:
             tcpSocket:
-              port: 9200
-            failureThreshold: 30
-            periodSeconds: 10
+              port: {{ .Values.service.port }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
       imagePullSecrets:
-        - name: regsecret
+        - name: {{ .Values.imagePullSecrets[0].name }}
