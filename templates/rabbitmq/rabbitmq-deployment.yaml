@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: {{ .Values.rabbitmq.replicaCount }}
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.rabbitmq.imagePullSecrets[0].name }}
+      containers:
+      - name: rabbitmq
+        image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
+        imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: {{ .Values.rabbitmq.auth.username }}
+        - name: RABBITMQ_DEFAULT_PASS
+          value: {{ .Values.rabbitmq.auth.password }}
+        - name: RABBITMQ_PLUGINS
+          value: "{{ .Values.rabbitmq.plugins | join(",") }}"
+        resources:
+          requests:
+            cpu: {{ .Values.rabbitmq.resources.requests.cpu }}
+            memory: {{ .Values.rabbitmq.resources.requests.memory }}
+        livenessProbe:
+          exec:
+            command:
+              - rabbitmqctl
+              - status
+          initialDelaySeconds: {{ .Values.rabbitmq.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.rabbitmq.probes.liveness.periodSeconds }}
+        readinessProbe:
+          exec:
+            command:
+              - rabbitmqctl
+              - status
+          initialDelaySeconds: {{ .Values.rabbitmq.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.rabbitmq.probes.readiness.periodSeconds }}
+        startupProbe:
+          exec:
+            command:
+              - rabbitmqctl
+              - status
+          failureThreshold: {{ .Values.rabbitmq.probes.startup.failureThreshold }}
+          periodSeconds: {{ .Values.rabbitmq.probes.startup.periodSeconds }}
