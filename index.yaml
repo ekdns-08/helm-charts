@@ -2,11 +2,19 @@ apiVersion: v1
 entries:
   nls-test:
   - apiVersion: v2
-    created: "2024-05-31T09:40:00.940769859+09:00"
+    created: "2024-05-31T10:04:22.680711507+09:00"
+    description: A Helm chart for Elasticsearch, RebbitMQ, Redis
+    digest: 8fee9be02484790740bfb3364e985e1975634517d33bd0114133cf22f9add38b
+    name: nls-test
+    urls:
+    - nls-test-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    created: "2024-05-31T10:04:22.648541677+09:00"
     description: A Helm chart for Elasticsearch, RebbitMQ, Redis
     digest: 9114261844099d7df7bccf1042f3e003662a5ffc5a833e1d9e45884081279db9
     name: nls-test
     urls:
     - nls-test-1.0.0.tgz
     version: 1.0.0
-generated: "2024-05-31T09:40:00.924822683+09:00"
+generated: "2024-05-31T10:04:22.633817268+09:00"
