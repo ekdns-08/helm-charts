@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nls-elasticsearch-deployment
+  name: nls-rabbitmq-deployment
   namespace: test
   labels:
     app: nls-rabbitmq
@@ -26,7 +26,7 @@ spec:
         app: nls-rabbitmq
     spec:
       containers:
-        - name: elasticsearch
+        - name: rabbitmq
           image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-rabbitmq:3.9.13-debian-10-r26
           imagePullPolicy: Always
           ports:
