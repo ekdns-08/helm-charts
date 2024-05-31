@@ -1,5 +1,4 @@
 apiVersion: v2
-name: elasticsearch
-description: A Helm chart for Elasticsearch
-version: 1.0.2
-appVersion: 7.10.2
+name: nls-test
+description: A Helm chart for Elasticsearch, RebbitMQ, Redis
+version: 1.0.0
