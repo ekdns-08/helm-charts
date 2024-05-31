@@ -1,52 +1,57 @@
+# startup Porbe 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: nls-elasticsearch-deployment
+  namespace: test
+  labels:
+    app: nls-rabbitmq
+  annotations:
+    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-rabbitmq:3.9.13-debian-10-r26
 spec:
-  replicas: {{ .Values.rabbitmq.replicaCount }}
+  replicas: 1
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
-      app: rabbitmq
+      app: nls-rabbitmq
   template:
     metadata:
       labels:
-        app: rabbitmq
+        app: nls-rabbitmq
     spec:
+      containers:
+        - name: elasticsearch
+          image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-rabbitmq:3.9.13-debian-10-r26
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5672
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1200Mi
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 5672
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 5672
+          startupProbe:
+            tcpSocket:
+              port: 5672
+            failureThreshold: 30
+            periodSeconds: 10
       imagePullSecrets:
         - name: regsecret
-      containers:
-      - name: rabbitmq
-        image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
-        imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
-        env:
-        - name: RABBITMQ_DEFAULT_USER
-          value: {{ .Values.rabbitmq.auth.username }}
-        - name: RABBITMQ_DEFAULT_PASS
-          value: {{ .Values.rabbitmq.auth.password }}
-        - name: RABBITMQ_PLUGINS
-          value: "{{ .Values.rabbitmq.plugins | join "," }}"
-        resources:
-          requests:
-            cpu: {{ .Values.rabbitmq.resources.requests.cpu }}
-            memory: {{ .Values.rabbitmq.resources.requests.memory }}
-        livenessProbe:
-          exec:
-            command:
-              - rabbitmqctl
-              - status
-          initialDelaySeconds: {{ .Values.rabbitmq.probes.liveness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.rabbitmq.probes.liveness.periodSeconds }}
-        readinessProbe:
-          exec:
-            command:
-              - rabbitmqctl
-              - status
-          initialDelaySeconds: {{ .Values.rabbitmq.probes.readiness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.rabbitmq.probes.readiness.periodSeconds }}
-        startupProbe:
-          exec:
-            command:
-              - rabbitmqctl
-              - status
-          failureThreshold: {{ .Values.rabbitmq.probes.startup.failureThreshold }}
-          periodSeconds: {{ .Values.rabbitmq.probes.startup.periodSeconds }}
