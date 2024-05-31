@@ -1,1 +1,46 @@
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: {{ .Values.redis.replicaCount }}
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.redis.imagePullSecrets[0].name }}
+      containers:
+      - name: redis
+        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+        command: ["redis-server", "--requirepass", {{ .Values.redis.auth.password | quote }}]
+        resources:
+          requests:
+            cpu: {{ .Values.redis.resources.requests.cpu }}
+            memory: {{ .Values.redis.resources.requests.memory }}
+        livenessProbe:
+          exec:
+            command:
+              - redis-cli
+              - ping
+          initialDelaySeconds: {{ .Values.redis.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.redis.probes.liveness.periodSeconds }}
+        readinessProbe:
+          exec:
+            command:
+              - redis-cli
+              - ping
+          initialDelaySeconds: {{ .Values.redis.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.redis.probes.readiness.periodSeconds }}
+        startupProbe:
+          exec:
+            command:
+              - redis-cli
+              - ping
+          failureThreshold: {{ .Values.redis.probes.startup.failureThreshold }}
+          periodSeconds: {{ .Values.redis.probes.startup.periodSeconds }}
