@@ -1,0 +1,12 @@
+apiVersion: v1
+entries:
+  nls-rabbitmq:
+  - apiVersion: v2
+    created: "2024-05-31T16:02:41.14571752+09:00"
+    description: A Helm chart for RabbitMQ deployment
+    digest: b8bf46b3443e4a158f39a38027a9629be5ffbc598a8a4f1e376c16d76a416631
+    name: nls-rabbitmq
+    urls:
+    - nls-rabbitmq-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-05-31T16:02:40.927229453+09:00"
