@@ -1,46 +1,57 @@
+# startup Porbe 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: nls-redis-deployment
+  namespace: test
+  labels:
+    app: nls-redis
+  annotations:
+    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-redis:7.0.1-debian-11-r3
 spec:
-  replicas: {{ .Values.redis.replicaCount }}
+  replicas: 1
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
-      app: redis
+      app: nls-redis
   template:
     metadata:
       labels:
-        app: redis
+        app: nls-redis
     spec:
+      containers:
+        - name: redis
+          image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-redis:7.0.1-debian-11-r3
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6379
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1200Mi
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 6379
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 6379
+          startupProbe:
+            tcpSocket:
+              port: 6379
+            failureThreshold: 30
+            periodSeconds: 10
       imagePullSecrets:
         - name: regsecret
-      containers:
-      - name: redis
-        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
-        imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
-        command: ["redis-server", "--requirepass", {{ .Values.redis.auth.password | quote }}]
-        resources:
-          requests:
-            cpu: {{ .Values.redis.resources.requests.cpu }}
-            memory: {{ .Values.redis.resources.requests.memory }}
-        livenessProbe:
-          exec:
-            command:
-              - redis-cli
-              - ping
-          initialDelaySeconds: {{ .Values.redis.probes.liveness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.redis.probes.liveness.periodSeconds }}
-        readinessProbe:
-          exec:
-            command:
-              - redis-cli
-              - ping
-          initialDelaySeconds: {{ .Values.redis.probes.readiness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.redis.probes.readiness.periodSeconds }}
-        startupProbe:
-          exec:
-            command:
-              - redis-cli
-              - ping
-          failureThreshold: {{ .Values.redis.probes.startup.failureThreshold }}
-          periodSeconds: {{ .Values.redis.probes.startup.periodSeconds }}
