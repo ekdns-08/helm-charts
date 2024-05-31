@@ -29,6 +29,6 @@ probes:
     failureThreshold: 30
     periodSeconds: 10
 
-auth:
+elasticsearch:
   username: elastic
   password: elastic
