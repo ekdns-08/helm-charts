@@ -1,4 +1,4 @@
 apiVersion: v2
-name: nls-test
-description: A Helm chart for Elasticsearch, RebbitMQ, Redis
-version: 0.0.1
+name: nls-rabbitmq
+description: A Helm chart for RabbitMQ deployment
+version: 0.1.0
