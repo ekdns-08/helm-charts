@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "nls-rabbitmq.fullname" . }}-deployment
-  namespace: {{ .Release.Namespace }}
+  name: nls-elastic-deployment
+  namespace: test
   labels:
-    app: {{ include "nls-rabbitmq.name" . }}
+    app: nls-elastic
   annotations:
-    kubernetes.io/change-cause: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 3
   progressDeadlineSeconds: 120
   revisionHistoryLimit: 10
   strategy:
@@ -18,44 +18,22 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: {{ include "nls-rabbitmq.name" . }}
+      app: nls-elastic
   template:
     metadata:
       labels:
-        app: {{ include "nls-rabbitmq.name" . }}
+        app: nls-elastic
     spec:
       containers:
-        - name: rabbitmq
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          resources:
-            requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
-          livenessProbe:
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            httpGet:
-              path: {{ .Values.livenessProbe.path }}
-              port: {{ .Values.service.port }}
-          readinessProbe:
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: {{ .Values.service.port }}
-          startupProbe:
-            tcpSocket:
-              port: {{ .Values.startupProbe.port }}
-            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
-            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
-          env:
-            - name: RABBITMQ_DEFAULT_USER
-              value: {{ .Values.rabbitmqCredentials.username }}
-            - name: RABBITMQ_DEFAULT_PASS
-              value: {{ .Values.rabbitmqCredentials.password }}
+      - name: core
+        image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9200
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1350Mi
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecrets[0].name }}
+      - name: regsecret
