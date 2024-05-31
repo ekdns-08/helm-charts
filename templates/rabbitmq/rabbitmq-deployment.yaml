@@ -13,7 +13,7 @@ spec:
         app: rabbitmq
     spec:
       imagePullSecrets:
-        - name: {{ .Values.rabbitmq.imagePullSecrets[0].name }}
+        - name: regsecret
       containers:
       - name: rabbitmq
         image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
