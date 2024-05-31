@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nls-elasticsearch-deployment
+  name: {{ include "nls-rabbitmq.fullname" . }}-deployment
   namespace: {{ .Release.Namespace }}
   labels:
-    app: nls-elastic
+    app: {{ include "nls-rabbitmq.name" . }}
   annotations:
-    kubernetes.io/change-cause: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+    kubernetes.io/change-cause: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   progressDeadlineSeconds: 120
@@ -18,44 +18,44 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: nls-elastic
+      app: {{ include "nls-rabbitmq.name" . }}
   template:
     metadata:
       labels:
-        app: nls-elastic
+        app: {{ include "nls-rabbitmq.name" . }}
     spec:
       containers:
-        - name: elasticsearch
+        - name: rabbitmq
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 9200
+            - containerPort: {{ .Values.service.port }}
               protocol: TCP
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
               memory: {{ .Values.resources.requests.memory }}
-          env:
-            - name: ELASTIC_USERNAME
-              value: {{ .Values.auth.username }}
-            - name: ELASTIC_PASSWORD
-              value: {{ .Values.auth.password }}
           livenessProbe:
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             httpGet:
-              path: /
-              port: 9200
-            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.service.port }}
           readinessProbe:
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             httpGet:
-              path: /
-              port: 9200
-            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.service.port }}
           startupProbe:
             tcpSocket:
-              port: 9200
-            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
-            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+              port: {{ .Values.startupProbe.port }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmqCredentials.username }}
+            - name: RABBITMQ_DEFAULT_PASS
+              value: {{ .Values.rabbitmqCredentials.password }}
       imagePullSecrets:
         - name: {{ .Values.imagePullSecrets[0].name }}
