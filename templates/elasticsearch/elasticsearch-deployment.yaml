@@ -1,59 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "elasticsearch.fullname" . }}-deployment
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app: {{ include "elasticsearch.name" . }}
-  annotations:
-    kubernetes.io/change-cause: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+  name: elasticsearch
 spec:
-  replicas: {{ .Values.replicaCount }}
-  progressDeadlineSeconds: 120
-  revisionHistoryLimit: 10
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+  replicas: {{ .Values.elasticsearch.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "elasticsearch.name" . }}
+      app: elasticsearch
   template:
     metadata:
       labels:
-        app: {{ include "elasticsearch.name" . }}
+        app: elasticsearch
     spec:
-      containers:
-        - name: elasticsearch
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          resources:
-            requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
-          livenessProbe:
-            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
-            httpGet:
-              path: /
-              port: {{ .Values.service.port }}
-          readinessProbe:
-            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
-            httpGet:
-              path: /
-              port: {{ .Values.service.port }}
-          startupProbe:
-            tcpSocket:
-              port: {{ .Values.service.port }}
-            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
-            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
-      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: ‎regsecret
-        {{- end }}
-      {{- end }}
+        - name: {{ .Values.elasticsearch.imagePullSecrets[0].name }}
+      containers:
+      - name: elasticsearch
+        image: "{{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}"
+        imagePullPolicy: {{ .Values.elasticsearch.image.pullPolicy }}
+        env:
+        - name: ELASTIC_USERNAME
+          value: {{ .Values.elasticsearch.auth.username }}
+        - name: ELASTIC_PASSWORD
+          value: {{ .Values.elasticsearch.auth.password }}
+        resources:
+          requests:
+            cpu: {{ .Values.elasticsearch.resources.requests.cpu }}
+            memory: {{ .Values.elasticsearch.resources.requests.memory }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9200
+          initialDelaySeconds: {{ .Values.elasticsearch.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.elasticsearch.probes.liveness.periodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9200
+          initialDelaySeconds: {{ .Values.elasticsearch.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.elasticsearch.probes.readiness.periodSeconds }}
+        startupProbe:
+          httpGet:
+            path: /
+            port: 9200
+          failureThreshold: {{ .Values.elasticsearch.probes.startup.failureThreshold }}
+          periodSeconds: {{ .Values.elasticsearch.probes.startup.periodSeconds }}
