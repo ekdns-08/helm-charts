@@ -57,10 +57,11 @@ rabbitmq:
   auth:
     username: chatbot
     password: chatbot
-  plugins:
-    - rabbitmq_management
-    - rabbitmq_stomp
-    - rabbitmq_web_stomp
+  plugins: "rabbitmq_management rabbitmq_stomp rabbitmq_web_stomp"
+#  plugins:
+#    - rabbitmq_management
+#    - rabbitmq_stomp
+#    - rabbitmq_web_stomp
 
 redis:
   replicaCount: 1
