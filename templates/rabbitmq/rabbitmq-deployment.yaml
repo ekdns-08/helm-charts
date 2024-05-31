@@ -24,7 +24,7 @@ spec:
         - name: RABBITMQ_DEFAULT_PASS
           value: {{ .Values.rabbitmq.auth.password }}
         - name: RABBITMQ_PLUGINS
-          value: "{{ .Values.rabbitmq.plugins | join(",") }}"
+          value: "{{ .Values.rabbitmq.plugins | join "," }}"
         resources:
           requests:
             cpu: {{ .Values.rabbitmq.resources.requests.cpu }}
