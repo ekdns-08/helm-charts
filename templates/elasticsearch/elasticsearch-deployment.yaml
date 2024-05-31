@@ -13,7 +13,7 @@ spec:
         app: elasticsearch
     spec:
       imagePullSecrets:
-        - name: {{ .Values.elasticsearch.imagePullSecrets[0].name }}
+        - name: regsecret
       containers:
       - name: elasticsearch
         image: "{{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}"
