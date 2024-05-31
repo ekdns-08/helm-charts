@@ -13,7 +13,7 @@ spec:
         app: redis
     spec:
       imagePullSecrets:
-        - name: {{ .Values.redis.imagePullSecrets[0].name }}
+        - name: regsecret
       containers:
       - name: redis
         image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
