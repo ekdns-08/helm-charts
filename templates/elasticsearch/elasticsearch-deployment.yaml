@@ -1,47 +1,57 @@
+# startup Porbe 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elasticsearch
+  name: nls-elasticsearch-deployment
+  namespace: test
+  labels:
+    app: nls-elastic
+  annotations:
+    kubernetes.io/change-cause: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
 spec:
-  replicas: {{ .Values.elasticsearch.replicaCount }}
+  replicas: 1
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
-      app: elasticsearch
+      app: nls-elastic
   template:
     metadata:
       labels:
-        app: elasticsearch
+        app: nls-elastic
     spec:
+      containers:
+        - name: elasticsearch
+          image: seoulbigdata-registry.ncr.gov-ntruss.com/nls-docker-elasticsearch:7.10.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9200
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1200Mi
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 9200
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            httpGet:
+              path: /
+              port: 9200
+          startupProbe:
+            tcpSocket:
+              port: 9200
+            failureThreshold: 30
+            periodSeconds: 10
       imagePullSecrets:
         - name: regsecret
-      containers:
-      - name: elasticsearch
-        image: "{{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}"
-        imagePullPolicy: {{ .Values.elasticsearch.image.pullPolicy }}
-        env:
-        - name: ELASTIC_USERNAME
-          value: {{ .Values.elasticsearch.auth.username }}
-        - name: ELASTIC_PASSWORD
-          value: {{ .Values.elasticsearch.auth.password }}
-        resources:
-          requests:
-            cpu: {{ .Values.elasticsearch.resources.requests.cpu }}
-            memory: {{ .Values.elasticsearch.resources.requests.memory }}
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 9200
-          initialDelaySeconds: {{ .Values.elasticsearch.probes.liveness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.elasticsearch.probes.liveness.periodSeconds }}
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 9200
-          initialDelaySeconds: {{ .Values.elasticsearch.probes.readiness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.elasticsearch.probes.readiness.periodSeconds }}
-        startupProbe:
-          httpGet:
-            path: /
-            port: 9200
-          failureThreshold: {{ .Values.elasticsearch.probes.startup.failureThreshold }}
-          periodSeconds: {{ .Values.elasticsearch.probes.startup.periodSeconds }}
