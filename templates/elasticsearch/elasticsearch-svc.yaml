@@ -4,18 +4,18 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/healthcheck-path: /
   name: nls-elasticsearch-service
-  namespace: test
+  namespace: {{ .Release.Namespace }}
   labels:
     app: nls-elastic
 spec:
-  type: NodePort
-  selector:
-    app: nls-elastic
+  type: {{ .Values.service.type }}
   ports:
     - protocol: TCP
-      port: 9200
+      port: {{ .Values.service.port }}
       targetPort: 9200
-      nodePort: 30082
+      nodePort: {{ .Values.service.nodePort }}
+  selector:
+    app: nls-elastic
   sessionAffinity: ClientIP
   sessionAffinityConfig:
     clientIP:
