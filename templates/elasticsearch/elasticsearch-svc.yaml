@@ -13,10 +13,6 @@ spec:
     app: {{ .Values.commonLabels.app }}
   ports:
   - protocol: TCP
-    port: {{ .Values.containerPorts.amqp }}
-    targetPort: {{ .Values.containerPorts.amqp }}
+    port: 9200
+    targetPort: 9200
     nodePort: {{ .Values.service.nodePorts.amqp }}
-  sessionAffinity: ClientIP
-  sessionAffinityConfig:
-    clientIP:
-      timeoutSeconds: 1800
