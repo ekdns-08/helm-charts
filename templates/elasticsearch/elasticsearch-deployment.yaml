@@ -29,38 +29,11 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.containerPorts.amqp }}
+        - containerPort: 9200
           protocol: TCP
         resources:
           requests:
-            cpu: 200m
-            memory: 1200Mi
-        livenessProbe:
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 6
-          successThreshold: 1
-          httpGet:
-            path: {{ .Values.livenessProbe.path }}
-            port: {{ .Values.containerPorts.amqp }}
-        readinessProbe:
-          initialDelaySeconds: 20
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-          successThreshold: 1
-          httpGet:
-            path: {{ .Values.readinessProbe.path }}
-            port: {{ .Values.containerPorts.amqp }}
-        startupProbe:
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 60
-          successThreshold: 1
-          httpGet:
-            path: {{ .Values.startupProbe.path }}
-            port: {{ .Values.containerPorts.amqp }}
+            cpu: 100m
+            memory: 1350Mi
       imagePullSecrets:
       - name: {{ .Values.imagePullSecrets[0] }}
