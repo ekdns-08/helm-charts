@@ -1,4 +1,4 @@
 apiVersion: v2
 name: nls-helm-test
 description: Helm Test
-version: 0.0.3
+version: 0.0.4
