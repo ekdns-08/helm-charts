@@ -2,11 +2,19 @@ apiVersion: v1
 entries:
   nls-helm-test:
   - apiVersion: v2
-    created: "2024-05-31T16:45:48.814583702+09:00"
+    created: "2024-06-03T14:25:40.506439395+09:00"
+    description: Helm Test
+    digest: 1c4c9e9c4649df71cb128fe7caa5d7972979b0a1c1f217ab9f7574f22780152a
+    name: nls-helm-test
+    urls:
+    - nls-helm-test-0.0.4.tgz
+    version: 0.0.4
+  - apiVersion: v2
+    created: "2024-06-03T14:25:39.851485437+09:00"
     description: Helm Test
     digest: 7bf38e2cc58a580fd39132fdd0de4eabe69d71bf3e53b73030c450219a7ae52e
     name: nls-helm-test
     urls:
     - nls-helm-test-0.0.3.tgz
     version: 0.0.3
-generated: "2024-05-31T16:45:48.402741528+09:00"
+generated: "2024-06-03T14:25:39.442932733+09:00"
