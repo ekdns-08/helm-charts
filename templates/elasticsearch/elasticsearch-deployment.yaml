@@ -36,21 +36,31 @@ spec:
             cpu: 200m
             memory: 1200Mi
         livenessProbe:
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
           httpGet:
-           path: /
-           port: {{ .Values.containerPorts.amqp }}
+            path: {{ .Values.livenessProbe.path }}
+            port: {{ .Values.containerPorts.amqp }}
         readinessProbe:
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
           httpGet:
-            path: /
+            path: {{ .Values.readinessProbe.path }}
             port: {{ .Values.containerPorts.amqp }}
         startupProbe:
-          tcpSocket:
-            port: {{ .Values.containerPorts.amqp }}
-          failureThreshold: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 60
+          successThreshold: 1
+          httpGet:
+            path: {{ .Values.startupProbe.path }}
+            port: {{ .Values.containerPorts.amqp }}
       imagePullSecrets:
       - name: {{ .Values.imagePullSecrets[0] }}
