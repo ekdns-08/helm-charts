@@ -1,145 +1,56 @@
-{{- /*
-Copyright Broadcom, Inc. All Rights Reserved.
-SPDX-License-Identifier: APACHE-2.0
-*/}}
-
-apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}
-  namespace: {{ include "common.names.namespace" . | quote }}
-  {{- $labels := include "common.tplvalues.merge" ( dict "values" ( list .Values.statefulsetLabels .Values.commonLabels ) "context" . ) }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" $labels "context" $ ) | nindent 4 }}
-  {{- if or .Values.statefulsetAnnotations .Values.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.statefulsetAnnotations .Values.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
+  namespace: {{ .Values.namespaceOverride }}
+  labels:
+    app: {{ .Values.commonLabels.app }}
+  annotations:
+    kubernetes.io/change-cause: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  progressDeadlineSeconds: 120
+  revisionHistoryLimit: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
-    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $labels "context" $ ) | nindent 6 }}
+    matchLabels:
+      app: {{ .Values.commonLabels.app }}
   template:
     metadata:
-      labels: {{- include "common.labels.standard" ( dict "customLabels" $labels "context" $ ) | nindent 8 }}
-      annotations:
-        {{- if .Values.commonAnnotations }}
-        {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 8 }}
-        {{- end }}
-        checksum/config: {{ include (print $.Template.BasePath "/config-secret.yaml") . | sha256sum }}
-        {{- if (include "rabbitmq.createTlsSecret" . ) }}
-        checksum/config: {{ include (print $.Template.BasePath "/tls-secrets.yaml") . | sha256sum }}
-        {{- end }}
-        {{- if or (not .Values.auth.existingErlangSecret) (not .Values.auth.existingPasswordSecret) .Values.extraSecrets }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
-        {{- end }}
-        {{- if .Values.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
-        {{- end }}
-        {{- if and .Values.metrics.enabled .Values.metrics.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.metrics.podAnnotations "context" $) | nindent 8 }}
-        {{- end }}
+      labels:
+        app: {{ .Values.commonLabels.app }}
     spec:
-      {{- include "rabbitmq.imagePullSecrets" . | nindent 6 }}
-      {{- if .Values.schedulerName }}
-      schedulerName: {{ .Values.schedulerName | quote }}
-      {{- end }}
-      serviceAccountName: {{ template "rabbitmq.serviceAccountName" . }}
-      {{- if .Values.affinity }}
-      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" .) | nindent 8 }}
-      {{- else }}
-      affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAffinityPreset "customLabels" $labels "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset "customLabels" $labels "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values) | nindent 10 }}
-      {{- end }}
-      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
-      {{- if .Values.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.nodeSelector }}
-      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.nodeSelector "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.tolerations }}
-      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.topologySpreadConstraints "context" .) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName }}
-      {{- end }}
-      {{- if .Values.podSecurityContext.enabled }}
-      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" $) | nindent 8 }}
-      {{- end }}
-      {{- if .Values.dnsPolicy }}
-      dnsPolicy: {{ .Values.dnsPolicy }}
-      {{- end }}
-      {{- if .Values.dnsConfig }}
-      dnsConfig: {{- include "common.tplvalues.render" (dict "value" .Values.dnsConfig "context" .) | nindent 8 }}
-      {{- end }}
-      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
-      enableServiceLinks: {{ .Values.enableServiceLinks }}
-      initContainers:
-        {{- if and .Values.volumePermissions.enabled .Values.persistence.enabled }}
-        - name: volume-permissions
-          image: {{ include "rabbitmq.volumePermissions.image" . }}
-          imagePullPolicy: {{ .Values.volumePermissions.image.pullPolicy | quote }}
-          command:
-            - /bin/bash
-          args:
-            - -ec
-            - |
-              mkdir -p "{{ .Values.persistence.mountPath }}"
-              {{- if eq ( toString ( .Values.volumePermissions.containerSecurityContext.runAsUser )) "auto" }}
-              chown `id -u`:`id -G | cut -d " " -f2` {{ .Values.persistence.mountPath }}
-              {{- else }}
-              chown "{{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}" "{{ .Values.persistence.mountPath }}"
-              {{- end }}
-              find "{{ .Values.persistence.mountPath }}" -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | \
-              {{- if eq ( toString ( .Values.volumePermissions.containerSecurityContext.runAsUser )) "auto" }}
-                xargs -r chown -R `id -u`:`id -G | cut -d " " -f2`
-              {{- else }}
-                xargs -r chown -R "{{ .Values.containerSecurityContext.runAsUser }}:{{ .Values.podSecurityContext.fsGroup }}"
-              {{- end }}
-          {{- if eq ( toString ( .Values.volumePermissions.containerSecurityContext.runAsUser )) "auto" }}
-          securityContext: {{- omit .Values.volumePermissions.containerSecurityContext "runAsUser" | toYaml | nindent 12 }}
-          {{- else }}
-          securityContext: {{- .Values.volumePermissions.containerSecurityContext | toYaml | nindent 12 }}
-          {{- end }}
-          {{- if .Values.volumePermissions.resources }}
-          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
-          {{- else if ne .Values.volumePermissions.resourcesPreset "none" }}
-          resources: {{- include "common.resources.preset" (dict "type" .Values.volumePermissions.resourcesPreset) | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: data
-              mountPath: {{ .Values.persistence.mountPath }}
-              {{- if .Values.persistence.subPath }}
-              subPath: {{ .Values.persistence.subPath }}
-              {{- end }}
-        {{- end }}
-        - name: prepare-plugins-dir
-          image: {{ template "rabbitmq.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-          {{- if .Values.resources }}
-          resources: {{- toYaml .Values.resources | nindent 12 }}
-          {{- else if ne .Values.resourcesPreset "none" }}
-          resources: {{- include "common.resources.preset" (dict "type" .Values.resourcesPreset) | nindent 12 }}
-          {{- end }}
-          {{- if .Values.containerSecurityContext.enabled }}
-          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.containerSecurityContext "context" $) | nindent 12 }}
-          {{- end }}
-          command:
-            - /bin/bash
-          args:
-            - -ec
-            - |
-              #!/bin/bash
-
-              . /opt/bitnami/scripts/liblog.sh
-
-              info "Copying plugins dir to empty dir"
-              #
+      containers:
+      - name: core
+        image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.containerPorts.amqp }}
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1200Mi
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          httpGet:
+           path: /
+           port: {{ .Values.containerPorts.amqp }}
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          httpGet:
+            path: /
+            port: {{ .Values.containerPorts.amqp }}
+        startupProbe:
+          tcpSocket:
+            port: {{ .Values.containerPorts.amqp }}
+          failureThreshold: 30
+          periodSeconds: 10
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets[0] }}
