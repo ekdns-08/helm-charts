@@ -1,12 +1,356 @@
-## 기존 values.yaml 내용에 추가로 아래 항목들을 추가합니다.
-replicaCount: 1
+global:
+  imagePullSecrets: [regsecret]
+  compatibility:
+    openshift:
+      adaptSecurityContext: auto
+
+image:
+  registry: seoulbigdata-registry.ncr.gov-ntruss.com
+  repository: nls-docker-rabbitmq
+  tag: 3.9.13-debian-10-r26
+  pullPolicy: IfNotPresent
+  pullSecrets: [regsecret]
+
+nameOverride: ""
+fullnameOverride: ""
 namespaceOverride: "test"
+kubeVersion: ""
+clusterDomain: cluster.local
+extraDeploy: []
+commonAnnotations: {}
+servicenameOverride: ""
 commonLabels:
-  app: "nls-elastic"
+  app: nls-rabbitmq
+
+serviceBindings:
+  enabled: false
+enableServiceLinks: true
+diagnosticMode:
+  enabled: false
+  command: ["sleep"]
+  args: ["infinity"]
+automountServiceAccountToken: true
+hostAliases: []
+dnsPolicy: ""
+dnsConfig: {}
+
+auth:
+  username: test123
+  password: "Test123!@"
+  securePassword: true
+  enableLoopbackUser: false
+  erlangCookie: ""
+  existingErlangSecret: ""
+  existingSecretErlangKey: ""
+  tls:
+    enabled: false
+
+logs: "-"
+ulimitNofiles: "65536"
+maxAvailableSchedulers: ""
+onlineSchedulers: ""
+memoryHighWatermark:
+  enabled: false
+  type: "relative"
+  value: 0.4
+
+plugins: "rabbitmq_management rabbitmq_peer_discovery_k8s"
+extraPlugins: "rabbitmq_auth_backend_ldap rabbitmq_stomp rabbitmq_web_stomp"
+
+clustering:
+  enabled: true
+  addressType: hostname
+  rebalance: false
+  forceBoot: false
+  partitionHandling: autoheal
+
+loadDefinition:
+  enabled: false
+
+command: []
+args: []
+lifecycleHooks: {}
+terminationGracePeriodSeconds: 120
+extraEnvVars: []
+extraEnvVarsCM: ""
+extraEnvVarsSecret: []
 containerPorts:
-  amqp: 9200
+  amqp: 5672
+  amqpTls: 5671
+  dist: 25672
+  manager: 15672
+  epmd: 4369
+  metrics: 9419
+
+initScripts: {}
+initScriptsCM: ""
+initScriptsSecret: ""
+extraContainerPorts: []
+
+tcpListenOptions:
+  backlog: 128
+  nodelay: true
+  linger:
+    lingerOn: true
+    timeout: 0
+  keepalive: false
+
+configuration: |-
+  default_user = {{ .Values.auth.username }}
+  {{- if and (not .Values.auth.securePassword) .Values.auth.password }}
+  default_pass = {{ .Values.auth.password }}
+  {{- end }}
+  {{- if .Values.clustering.enabled }}
+  cluster_name = {{ default (include "common.names.fullname" .) .Values.clustering.name }}
+  cluster_formation.peer_discovery_backend  = rabbit_peer_discovery_k8s
+  cluster_formation.k8s.host = kubernetes.default
+  cluster_formation.k8s.address_type = {{ .Values.clustering.addressType }}
+  {{- $svcName := printf "%s-%s" (include "common.names.fullname" .) (default "headless" .Values.servicenameOverride) }}
+  cluster_formation.k8s.service_name = {{ $svcName }}
+  cluster_formation.k8s.hostname_suffix = .{{ $svcName }}.{{ include "common.names.namespace" . }}.svc.{{ .Values.clusterDomain }}
+  cluster_formation.node_cleanup.interval = 10
+  cluster_formation.node_cleanup.only_log_warning = true
+  cluster_partition_handling = {{ .Values.clustering.partitionHandling }}
+  {{- end }}
+  {{ if and .Values.clustering.enabled .Values.loadDefinition.enabled }}
+  cluster_formation.target_cluster_size_hint = {{ .Values.replicaCount }}
+  {{ end }}
+  {{- if .Values.loadDefinition.enabled }}
+  load_definitions = {{ .Values.loadDefinition.file }}
+  {{- end }}
+  queue_master_locator = min-masters
+  {{- if not (empty .Values.auth.username) }}
+  loopback_users.{{ .Values.auth.username }} = {{ .Values.auth.enableLoopbackUser }}
+  {{- else}}
+  loopback_users.guest = {{ .Values.auth.enableLoopbackUser }}
+  {{- end }}
+  {{ template "rabbitmq.extraConfiguration" . }}
+  {{- if .Values.auth.tls.enabled }}
+  ssl_options.verify = {{ .Values.auth.tls.sslOptionsVerify }}
+  listeners.ssl.default = {{ .Values.service.ports.amqpTls }}
+  ssl_options.fail_if_no_peer_cert = {{ .Values.auth.tls.failIfNoPeerCert }}
+  ssl_options.cacertfile = /opt/bitnami/rabbitmq/certs/ca_certificate.pem
+  ssl_options.certfile = /opt/bitnami/rabbitmq/certs/server_certificate.pem
+  ssl_options.keyfile = /opt/bitnami/rabbitmq/certs/server_key.pem
+  {{- if .Values.auth.tls.sslOptionsPassword.enabled }}
+  ssl_options.password = {{ template "rabbitmq.tlsSslOptionsPassword" . }}
+  {{- end }}
+  {{- end }}
+
+configurationExistingSecret: ""
+extraConfiguration: |-
+advancedConfiguration: ""
+advancedConfigurationExistingSecret: ""
+featureFlags: ""
+ldap:
+  enabled: false
+
+extraVolumeMounts: []
+extraVolumes: []
+extraSecrets: {}
+extraSecretsPrependReleaseName: false
+
+replicaCount: 1
+schedulerName: ""
+podManagementPolicy: OrderedReady
+podLabels: {}
+podAnnotations: {}
+updateStrategy:
+  type: RollingUpdate
+statefulsetLabels: {}
+statefulsetAnnotations: {}
+priorityClassName: ""
+podAffinityPreset: ""
+podAntiAffinityPreset: soft
+nodeAffinityPreset:
+  type: ""
+  key: ""
+  values: []
+affinity: {}
+nodeSelector: {}
+tolerations: []
+topologySpreadConstraints: []
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+
+resources:
+  limits: {}
+  requests: {}
+
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 60
+  successThreshold: 1
+  path: /api/health/ready
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+  path: /api/health/metrics
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+  path: /api/health/metrics
+
+customStartupProbe: {}
+customLivenessProbe: {}
+customReadinessProbe: {}
+
+initContainers: []
+sidecars: []
+extraPodSpec: []
+
+persistence:
+  enabled: true
+  storageClass: "ncloud-nas-reg"
+  annotations: {}
+  accessModes: [ "ReadWriteOnce" ]
+  size: 8Gi
+  existingClaim: ""
+  selector: {}
+
+volumePermissions:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/bitnami-shell
+    tag: 11-debian-11-r117
+    digest: ""
+    pullPolicy: Always
+    pullSecrets: []
+  resources:
+    limits: {}
+    requests: {}
+  securityContext:
+    enabled: true
+    runAsUser: 0
+
 service:
   type: NodePort
+  portEnabled: true
+  ports:
+    amqp: 5672
+    amqpTls: 5671
+    dist: 25672
+    manager: 15672
+    epmd: 4369
+    metrics: 9419
   nodePorts:
-    amqp: 30085
-imagePullSecrets: [regsecret]
+    amqp: 30000
+    amqpTls: 30001
+    dist: 30002
+    manager: 30003
+    epmd: 30004
+    metrics: 30005
+  loadBalancerIP: ""
+  clusterIP: ""
+  externalTrafficPolicy: Cluster
+  loadBalancerSourceRanges: []
+  labels: {}
+  annotations: {}
+  sessionAffinity: None
+  sessionAffinityConfig: {}
+  externalIPs: []
+  allocateLoadBalancerNodePorts: true
+  loadBalancerClass: ""
+  portNames:
+    amqp: amqp
+    amqpTls: amqp-tls
+    dist: dist
+    manager: manager
+    epmd: epmd
+    metrics: metrics
+
+pdb:
+  create: false
+  minAvailable: 1
+  maxUnavailable: ""
+
+ingress:
+  enabled: true
+  name: bigdata-test-ingress
+  description: 'helm test ALB ingress controller'
+  loadBalancerName: 'nls-test-alb'
+  loadBalancerSize: 'medium'
+  ingressClassName: 'alb'
+  actions:
+    serviceName: 'nls-elastic-svc'
+    servicePort: 9200
+  labels:
+    app: prod-alb-ingress
+  hostname: example.local
+  path: /
+  pathType: ImplementationSpecific
+  annotations: {}
+  tls: false
+  extraHosts: []
+  extraTls: []
+  secrets: []
+  extraRules: []
+
+networkPolicy:
+  enabled: false
+  ingress:
+    enabled: true
+    from: []
+  egress:
+    enabled: true
+    to: []
+
+metrics:
+  enabled: true
+  plugins: true
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: ""
+    scrapeTimeout: ""
+    selector: {}
+    labels: {}
+    metricRelabelings: []
+    relabelings: []
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "{{ .Values.containerPorts.metrics }}"
+  containerPort: 9419
+
+dashboard:
+  enabled: true
+  projectId: "rabbitmq"
+  projectKey: ""
+  dashboardUrl: "https://grafana.com/api/dashboards/10991"
+  image:
+    registry: docker.io
+    repository: bitnami/bitnami-grafana-dashboards
+    tag: latest
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resources:
+    limits: {}
+    requests: {}
+  securityContext:
+    enabled: true
+    runAsUser: 1001
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
