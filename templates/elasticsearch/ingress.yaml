@@ -1,29 +1,33 @@
-# /bsp/mtv 경로 설정 추가
-# path 설정 순서가 우선순위로 지정되어 /bsp/mtv 경로가 /bsp 보다 상단에 위치해야함.
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: bigdata-test-ingress
-  namespace: test
+  name: {{ .Values.ingress.name }}
+  namespace: {{ .Values.namespaceOverride }}
   annotations:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/description: 'helm test ALB ingress controller'
-    alb.ingress.kubernetes.io/load-balancer-name: 'nls-test-alb'
-    alb.ingress.kubernetes.io/load-balancer-size: 'medium'
-    alb.ingress.kubernetes.io/actions.nls-elastic-svc: >
-      {"type":"targetGroup","targetGroup":{"targetGroups":[{"serviceName":"nls-elastic-svc","servicePort":9200,"weight":100}],"enableStickySession":true}}
+    alb.ingress.kubernetes.io/description: '{{ .Values.ingress.description }}'
+    alb.ingress.kubernetes.io/load-balancer-name: '{{ .Values.ingress.loadBalancerName }}'
+    alb.ingress.kubernetes.io/load-balancer-size: '{{ .Values.ingress.loadBalancerSize }}'
+    alb.ingress.kubernetes.io/actions.{{ .Values.ingress.actions.serviceName }}: >
+      {"type":"targetGroup","targetGroup":{"targetGroups":[{"serviceName":"{{ .Values.ingress.actions.serviceName }}","servicePort":{{ .Values.ingress.actions.servicePort }},"weight":100}],"enableStickySession":true}}
   labels:
-    app: prod-alb-ingress
+    app: {{ .Values.ingress.labels.app }}
 spec:
-  ingressClassName: alb
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
   - http:
       paths:
+      - path: /bsp/mtv
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.ingress.actions.serviceName }}
+            port:
+              name: use-annotation
       - path: /
         pathType: Prefix
         backend:
           service:
-             name: nls-elastic-svc
-             port:
-                name: use-annotation
+            name: {{ .Values.ingress.actions.serviceName }}
+            port:
+              name: use-annotation
